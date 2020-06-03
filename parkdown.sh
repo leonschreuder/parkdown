@@ -2,11 +2,39 @@
 
 export MAX_LINE_LENGTH=72
 
+printHelp() {
+  echo 'Parkdown v0.1
+
+Formatting like 'par' but more aimed at markdown-style text editing.
+'
+}
+
 main() {
+  while getopts 'hw:' opt; do
+    case $opt in
+      h)
+        printHelp
+        exit
+        ;;
+      w)
+        MAX_LINE_LENGTH=$OPTARG
+        ;;
+    esac
+  done
+  shift "$((OPTIND - 1))"
+
+  LINE_LENGTH=$MAX_LINE_LENGTH
+  input="$(cat -)"
+  if [[ "$input" =~ ^([[:space:]]*)(#|//)?  ]]; then
+    indent="${BASH_REMATCH[1]}"
+    prefix="${BASH_REMATCH[2]}"
+    LINE_LENGTH=$((MAX_LINE_LENGTH - ( ${#indent} + ${#prefix} ) ))
+  fi
+
   LINE_BUILDER=""
   while read -r line; do
     splitLineForLength "$line"
-  done <<< "$(cat -)"
+  done <<< "$input"
 
   pushStack "$LINE_BUILDER"
   balanceLinesInStack
@@ -16,10 +44,14 @@ main() {
 
 splitLineForLength() {
   for word in $line; do
-    [[ "$LINE_BUILDER" == "" ]] && LINE_BUILDER="$word" && continue
+    [[ "$prefix" != "" && "$word" == "$prefix" ]] && continue
+    if [[ "$LINE_BUILDER" == "" ]]; then
+      LINE_BUILDER="$word"
+      continue
+    fi
 
     newConcat="$LINE_BUILDER $word"
-    if [[ ${#newConcat} -lt $MAX_LINE_LENGTH ]];then
+    if [[ ${#newConcat} -lt $LINE_LENGTH ]];then
       LINE_BUILDER="$newConcat"
     else
       pushStack "$LINE_BUILDER"
@@ -30,7 +62,13 @@ splitLineForLength() {
 }
 
 pushStack() {
-  [[ "$STACK3" != "" ]] && echo "$STACK3"
+  if [[ "$STACK3" != "" ]]; then
+    if [[ "$prefix" != "" ]]; then
+      echo "$indent$prefix $STACK3"
+    else
+      echo "$indent$STACK3"
+    fi
+  fi
   STACK3="$STACK2"
   STACK2="$STACK1"
   STACK1="$1"

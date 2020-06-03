@@ -5,13 +5,13 @@ setup() {
 }
 
 # Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
-# molestie consequat, vel illum dolore eu feugiat
-# nulla facilisis at vero eros et accumsan et iusto odio
-# dignissim qui blandit praesent luptatum zzril delenit augue
-# duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit
-# amet, consectetuer adipiscing elit, sed diam nonummy nibh
-# euismod tincidunt ut laoreet dolore magna aliquam erat
-# volutpat. 
+# molestie consequat, vel illum dolore eu feugiat nulla facilisis
+# at vero eros et accumsan et iusto odio dignissim qui blandit
+# praesent luptatum zzril delenit augue duis dolore te feugait nulla
+# facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
+# sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna
+# aliquam erat volutpat.
+
 
 
 test__shorter_strings_should_return_unchanged() {
@@ -60,10 +60,19 @@ molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+test__should_support_lengthening_shorter_lines() {
+  input='Duis autem vel eum iriure dolor in
+hendrerit in vulputate velit esse molestie
+consequat, vel illum dolore eu feugiat nulla
+facilisis at vero eros et.'
+  expected='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
+molestie consequat, vel illum dolore eu feugiat nulla facilisis at
+vero eros et.'
+  assertEquals "$expected" "$(echo "$input" | main)"
+}
+
 test__should_support_checking_shorter_indent_with_second_line() {
-  # export MAX_LINE_LENGTH=78
-  input='
-Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
+  input='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
 consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et.'
   expected='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
 molestie consequat, vel illum dolore eu feugiat nulla facilisis at
@@ -72,7 +81,6 @@ vero eros et.'
 }
 
 test__should_support_multiple_input_lines() {
-  # export MAX_LINE_LENGTH=78
   input='"Do one thing and do it well" is the principle of the Unix toolkit.
 Editing text is a broad domain, and there are many related tasks with
 which it overlaps. Vim acknowledges this by enabling certain tasks to be
@@ -88,7 +96,7 @@ for formatting text.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
-test__should_support_multiple_input_lines2() {
+test__should_support_specifying_length() {
   export MAX_LINE_LENGTH=31
   input='We the people of the United
 States, in order to form a more
@@ -140,8 +148,54 @@ portable, and very stable since version 1.41 released on 1993-Oct-31.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+test__should_support_prefixing() {
+  input='# "Do one thing and do it well" is the principle of the Unix toolkit.
+# Editing text is a broad domain, and there are many related tasks with
+# which it overlaps. Vim acknowledges this by enabling certain tasks to be
+# outsourced to external programs which do that one thing, and do it well.'
+  expected='# "Do one thing and do it well" is the principle of the Unix toolkit.
+# Editing text is a broad domain, and there are many related tasks with
+# which it overlaps. Vim acknowledges this by enabling certain tasks to
+# be outsourced to external programs which do that one thing, and do
+# it well.'
+  assertEquals "$expected" "$(echo "$input" | main)"
 
-ttest__should_balance_basic_lines() {
+  input='// "Do one thing and do it well" is the principle of the Unix toolkit.
+// Editing text is a broad domain, and there are many related tasks with
+// which it overlaps. Vim acknowledges this by enabling certain tasks to be
+// outsourced to external programs which do that one thing, and do it well.'
+  expected='// "Do one thing and do it well" is the principle of the Unix toolkit.
+// Editing text is a broad domain, and there are many related tasks with
+// which it overlaps. Vim acknowledges this by enabling certain tasks to
+// be outsourced to external programs which do that one thing, and do
+// it well.'
+  assertEquals "$expected" "$(echo "$input" | main)"
+}
+
+test__should_support_indentation() {
+  input='    "Do one thing and do it well" is the principle of the Unix toolkit.
+    Editing text is a broad domain, and there are many related tasks with
+    which it overlaps. Vim acknowledges this by enabling certain tasks to be
+    outsourced to external programs which do that one thing, and do it well.'
+  expected='    "Do one thing and do it well" is the principle of the Unix toolkit.
+    Editing text is a broad domain, and there are many related tasks
+    with which it overlaps. Vim acknowledges this by enabling certain
+    tasks to be outsourced to external programs which do that
+    one thing, and do it well.'
+  assertEquals "$expected" "$(echo "$input" | main)"
+  input='   # "Do one thing and do it well" is the principle of the Unix toolkit.
+   # Editing text is a broad domain, and there are many related tasks with
+   # which it overlaps. Vim acknowledges this by enabling certain tasks to be
+   # outsourced to external programs which do that one thing, and do it well.'
+  expected='   # "Do one thing and do it well" is the principle of the Unix toolkit.
+   # Editing text is a broad domain, and there are many related tasks
+   # with which it overlaps. Vim acknowledges this by enabling certain
+   # tasks to be outsourced to external programs which do that
+   # one thing, and do it well.'
+  assertEquals "$expected" "$(echo "$input" | main)"
+}
+
+test__should_balance_basic_lines() {
   pushStack "Duis autem vel eum iriure"
   pushStack "consequat, vel"
   balanceLinesInStack
@@ -150,8 +204,8 @@ ttest__should_balance_basic_lines() {
   assertEquals "iriure consequat, vel" "$STACK1"
 }
 
-totest__push_in_stack() {
-  soutput="$(
+test__push_in_stack() {
+  output="$(
     pushStack "line1"
     pushStack "line2"
     pushStack "line3"
@@ -170,14 +224,14 @@ totest__push_in_stack() {
 
   output="$(
     pushStack "line1"
-    bufClear
+    emptyStack
   )"
   assertEquals $'line1' "$output"
 
   output="$(
     pushStack "line1"
     pushStack "line2"
-    bufClear
+    emptyStack
   )"
   assertEquals $'line1\nline2' "$output"
 }
