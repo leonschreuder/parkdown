@@ -195,6 +195,39 @@ test__should_support_indentation() {
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+
+test__should_support_formatting_lists() {
+
+  input='- A "hardwareProfile = ..." variable in the esoAvd extension
+- A new "installHardwareProfiles" task for wat used to be contained as a
+  step in the "createEmulator" task. It "installs" all remotely
+  available hardware profiles.
+- The "createEmulator" task no longer modifies devices.xml, but as the
+  sdkmanager renames the devices.xml to devices.xml.old, it now reverts
+  that back.
+- Merging of hardwareProfiles in stead of overwriting, so local custom
+  hardware profiles are no longer removed.
+- The "startEmulator" task explicitly sets the hardwareProfile to that
+  which is set as a variable in the esoAvd {} extension.
+- A `-PforceHardwareProfile=...` property to overwrite the settings from
+  the build.gradle.kts.'
+  expected='- A "hardwareProfile = ..." variable in the esoAvd extension
+- A new "installHardwareProfiles" task for wat used to be contained
+  as a step in the "createEmulator" task. It "installs" all
+  remotely available hardware profiles.
+- The "createEmulator" task no longer modifies devices.xml, but as
+  the sdkmanager renames the devices.xml to devices.xml.old, it now
+  reverts that back.
+- Merging of hardwareProfiles in stead of overwriting, so local
+  custom hardware profiles are no longer removed.
+- The "startEmulator" task explicitly sets the hardwareProfile to
+  that which is set as a variable in the esoAvd {} extension.
+- A `-PforceHardwareProfile=...` property to overwrite the
+  settings from the build.gradle.kts.'
+
+  assertEquals "$expected" "$(echo "$input" | main)"
+}
+
 test__should_balance_basic_lines() {
   pushStack "Duis autem vel eum iriure"
   pushStack "consequat, vel"

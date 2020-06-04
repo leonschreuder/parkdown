@@ -3,10 +3,16 @@
 export MAX_LINE_LENGTH=72
 
 printHelp() {
-  echo 'Parkdown v0.1
+  echo "Parkdown v0.1
 
 Formatting like 'par' but more aimed at markdown-style text editing.
-'
+
+Usage:
+./parkdown.sh [-h] <<< "input"
+
+-h                Print this help
+-w<number>        Specify width to use. Currently defaults to '$MAX_LINE_LENGTH'
+"
 }
 
 main() {
@@ -35,14 +41,23 @@ main() {
   while read -r line; do
     splitLineForLength "$line"
   done <<< "$input"
+  finishBlock
+}
 
+finishBlock() {
   pushStack "$LINE_BUILDER"
+  LINE_BUILDER=""
   balanceLinesInStack
   checkEdgeCase
   emptyStack
 }
 
 splitLineForLength() {
+  line="$1"
+  if [[ "$line" == "-"* ]];then
+    listItem="-"
+    finishBlock
+  fi
   for word in $line; do
     [[ "$prefix" != "" && "$word" == "$prefix" ]] && continue
     if [[ "$LINE_BUILDER" == "" ]]; then
@@ -63,11 +78,17 @@ splitLineForLength() {
 
 pushStack() {
   if [[ "$STACK3" != "" ]]; then
-    if [[ "$prefix" != "" ]]; then
-      echo "$indent$prefix $STACK3"
-    else
-      echo "$indent$STACK3"
+    finalLine="$STACK3"
+    if [[ "$listItem" != "" ]]; then
+      if [[ "$finalLine" != "$listItem"* ]]; then
+        finalLine="  $finalLine"
+      fi
     fi
+    if [[ "$prefix" != "" ]]; then
+      finalLine="$prefix $finalLine"
+    fi
+    finalLine="$indent$finalLine"
+    echo "$finalLine"
   fi
   STACK3="$STACK2"
   STACK2="$STACK1"
