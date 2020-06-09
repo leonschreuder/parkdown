@@ -31,43 +31,63 @@ main() {
 
   LINE_LENGTH=$MAX_LINE_LENGTH
   input="$(cat -)"
-  if [[ "$input" =~ ^([[:space:]]*)(#|//)?  ]]; then
+
+  while IFS=$'\n' read  -r line; do
+
+    # simply print empty lines from input directly
+    [[ "$line" == "" ]] &&
+      echo "" && continue
+
+    [[ "$IN_BLOCK" != true ]] &&
+      startNewBlock "$line"
+
+    buildLinesFromWords "$line"
+
+  done <<< "$input"
+  closeBlock
+}
+
+startNewBlock() {
+  line="$1"
+  closeBlock
+
+  IN_BLOCK=true
+  LINE_BUILDER=""
+  if [[ "$line" =~ ^([[:space:]]*)(#|//)?  ]]; then
+    indentChecked=true
     indent="${BASH_REMATCH[1]}"
     prefix="${BASH_REMATCH[2]}"
     LINE_LENGTH=$((MAX_LINE_LENGTH - ( ${#indent} + ${#prefix} ) ))
   fi
-
-  LINE_BUILDER=""
-  while read -r line; do
-    splitLineForLength "$line"
-  done <<< "$input"
-  finishBlock
 }
 
-finishBlock() {
-  pushStack "$LINE_BUILDER"
+closeBlock() {
+  pushStack "$LINE_BUILDER" # might contain last line.
   LINE_BUILDER=""
   balanceLinesInStack
   checkEdgeCase
   emptyStack
+  IN_BLOCK=false
 }
 
-splitLineForLength() {
+buildLinesFromWords() {
   line="$1"
-  if [[ "$line" == "-"* ]];then
+  if [[ "$line" =~ ^[[:space:]]*-  ]]; then
     listItem="-"
-    finishBlock
+    startNewBlock "$line"
   fi
-  for word in $line; do
-    [[ "$prefix" != "" && "$word" == "$prefix" ]] && continue
-    if [[ "$LINE_BUILDER" == "" ]]; then
-      LINE_BUILDER="$word"
-      continue
-    fi
 
-    newConcat="$LINE_BUILDER $word"
-    if [[ ${#newConcat} -lt $LINE_LENGTH ]];then
-      LINE_BUILDER="$newConcat"
+  for word in $line; do
+    [[ "$prefix" != "" && "$word" == "$prefix" ]] &&
+      continue
+
+    [[ "$LINE_BUILDER" == "" ]] &&
+      LINE_BUILDER="$word" &&
+      continue
+
+    lineWithAddedWord="$LINE_BUILDER $word"
+    if [[ ${#lineWithAddedWord} -lt $LINE_LENGTH ]];then
+      LINE_BUILDER="$lineWithAddedWord"
     else
       pushStack "$LINE_BUILDER"
       balanceLinesInStack
@@ -78,17 +98,16 @@ splitLineForLength() {
 
 pushStack() {
   if [[ "$STACK3" != "" ]]; then
-    finalLine="$STACK3"
-    if [[ "$listItem" != "" ]]; then
-      if [[ "$finalLine" != "$listItem"* ]]; then
-        finalLine="  $finalLine"
-      fi
+    lineToPrint="$STACK3"
+    if [[ "$listItem" != "" && "$lineToPrint" != "$listItem"* ]]; then
+      # we're currently printing a list, but this line doesn't have the prefix
+      lineToPrint="  $lineToPrint"
     fi
     if [[ "$prefix" != "" ]]; then
-      finalLine="$prefix $finalLine"
+      lineToPrint="$prefix $lineToPrint"
     fi
-    finalLine="$indent$finalLine"
-    echo "$finalLine"
+    lineToPrint="$indent$lineToPrint"
+    echo "$lineToPrint"
   fi
   STACK3="$STACK2"
   STACK2="$STACK1"

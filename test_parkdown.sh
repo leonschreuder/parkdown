@@ -4,19 +4,12 @@ setup() {
   source ./parkdown.sh
 }
 
-# Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
-# molestie consequat, vel illum dolore eu feugiat nulla facilisis
-# at vero eros et accumsan et iusto odio dignissim qui blandit
-# praesent luptatum zzril delenit augue duis dolore te feugait nulla
-# facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-# sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna
-# aliquam erat volutpat.
-
 
 
 test__shorter_strings_should_return_unchanged() {
   assertEquals "a line" "$(echo 'a line' | ./parkdown.sh)"
 }
+
 
 test__strings_shorter_than_max_line_should_return_unchanged() {
   input='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse m.'
@@ -24,12 +17,14 @@ test__strings_shorter_than_max_line_should_return_unchanged() {
   assertEquals "$expected" "$(echo "$input" | ./parkdown.sh)"
 }
 
+
 test__strings_longer_than_max_line_should_break() {
   input='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse magic.'
   expected='Duis autem vel eum iriure dolor in hendrerit in vulputate velit
 esse magic.'
   assertEquals "$expected" "$(echo "$input" | ./parkdown.sh)"
 }
+
 
 test__should_support_multiple_linebreaks() {
   input='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio.'
@@ -39,14 +34,19 @@ vero eros et accumsan et iusto odio.'
   assertEquals "$expected" "$(echo "$input" | ./parkdown.sh)"
 }
 
+
 test__should_support_multiple_input_lines() {
   input='
 Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
 consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan
-et iusto odio.'
+et iusto odio.
+
+'
   expected='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
 molestie consequat, vel illum dolore eu feugiat nulla facilisis at
-vero eros et accumsan et iusto odio.'
+vero eros et accumsan et iusto odio.
+
+'
   assertEquals "$expected" "$(echo "$input" | ./parkdown.sh)"
 }
 
@@ -60,16 +60,20 @@ molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+
 test__should_support_lengthening_shorter_lines() {
-  input='Duis autem vel eum iriure dolor in
+  input='
+Duis autem vel eum iriure dolor in
 hendrerit in vulputate velit esse molestie
 consequat, vel illum dolore eu feugiat nulla
 facilisis at vero eros et.'
-  expected='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
+  expected='
+Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
 molestie consequat, vel illum dolore eu feugiat nulla facilisis at
 vero eros et.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
+
 
 test__should_support_checking_shorter_indent_with_second_line() {
   input='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
@@ -80,14 +84,19 @@ vero eros et.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+
 test__should_support_multiple_input_lines() {
-  input='"Do one thing and do it well" is the principle of the Unix toolkit.
+  input='
+
+"Do one thing and do it well" is the principle of the Unix toolkit.
 Editing text is a broad domain, and there are many related tasks with
 which it overlaps. Vim acknowledges this by enabling certain tasks to be
 outsourced to external programs which do that one thing, and do it well.
 This episode will demonstrate how the par program can be used for
 formatting text.'
-  expected='"Do one thing and do it well" is the principle of the Unix toolkit.
+  expected='
+
+"Do one thing and do it well" is the principle of the Unix toolkit.
 Editing text is a broad domain, and there are many related tasks with
 which it overlaps. Vim acknowledges this by enabling certain tasks to
 be outsourced to external programs which do that one thing, and do it
@@ -95,6 +104,7 @@ well. This episode will demonstrate how the par program can be used
 for formatting text.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
+
 
 test__should_support_specifying_length() {
   export MAX_LINE_LENGTH=31
@@ -148,6 +158,7 @@ portable, and very stable since version 1.41 released on 1993-Oct-31.'
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+
 test__should_support_prefixing() {
   input='# "Do one thing and do it well" is the principle of the Unix toolkit.
 # Editing text is a broad domain, and there are many related tasks with
@@ -172,6 +183,7 @@ test__should_support_prefixing() {
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+
 test__should_support_indentation() {
   input='    "Do one thing and do it well" is the principle of the Unix toolkit.
     Editing text is a broad domain, and there are many related tasks with
@@ -183,6 +195,7 @@ test__should_support_indentation() {
     tasks to be outsourced to external programs which do that
     one thing, and do it well.'
   assertEquals "$expected" "$(echo "$input" | main)"
+
   input='   # "Do one thing and do it well" is the principle of the Unix toolkit.
    # Editing text is a broad domain, and there are many related tasks with
    # which it overlaps. Vim acknowledges this by enabling certain tasks to be
@@ -197,8 +210,8 @@ test__should_support_indentation() {
 
 
 test__should_support_formatting_lists() {
-
-  input='- A "hardwareProfile = ..." variable in the esoAvd extension
+  input='
+- A "hardwareProfile = ..." variable in the esoAvd extension
 - A new "installHardwareProfiles" task for wat used to be contained as a
   step in the "createEmulator" task. It "installs" all remotely
   available hardware profiles.
@@ -211,7 +224,8 @@ test__should_support_formatting_lists() {
   which is set as a variable in the esoAvd {} extension.
 - A `-PforceHardwareProfile=...` property to overwrite the settings from
   the build.gradle.kts.'
-  expected='- A "hardwareProfile = ..." variable in the esoAvd extension
+  expected='
+- A "hardwareProfile = ..." variable in the esoAvd extension
 - A new "installHardwareProfiles" task for wat used to be contained
   as a step in the "createEmulator" task. It "installs" all
   remotely available hardware profiles.
@@ -228,6 +242,7 @@ test__should_support_formatting_lists() {
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+
 test__should_balance_basic_lines() {
   pushStack "Duis autem vel eum iriure"
   pushStack "consequat, vel"
@@ -236,6 +251,7 @@ test__should_balance_basic_lines() {
   assertEquals "Duis autem vel eum" "$STACK2"
   assertEquals "iriure consequat, vel" "$STACK1"
 }
+
 
 test__push_in_stack() {
   output="$(
@@ -269,9 +285,3 @@ test__push_in_stack() {
   assertEquals $'line1\nline2' "$output"
 }
 
-# Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
-# consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et
-# accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit
-# augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet,
-# consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
-# laoreet dolore magna aliquam erat volutpat. 
