@@ -36,7 +36,6 @@ vero eros et accumsan et iusto odio.'
 
 
 test__should_support_multiple_input_lines_with_breaks() {
-  export DEBUG=true
   input='
 Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
 consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan
@@ -49,7 +48,8 @@ molestie consequat, vel illum dolore eu feugiat nulla facilisis at
 vero eros et accumsan et iusto odio.
 
 '
-  assertEquals "$expected" "$(echo "$input" | ./parkdown.sh)"
+  # Add a '.' to the output so the trailing newlines are not stripped.
+  assertEquals "$(echo "$expected"; echo .)" "$(./parkdown.sh <<< "$input"; echo .)"
 }
 
 
@@ -244,6 +244,29 @@ test__should_support_formatting_lists() {
   assertEquals "$expected" "$(echo "$input" | main)"
 }
 
+test__format_more_pleasantly() {
+  export DEBUG=true
+  export MAX_LINE_LENGTH=78
+  input='
+Had repulsive dashwoods suspicion sincerity but advantage now him. Remark
+easily garret nor nay. Civil those mrs enjoy shy fat merry. You greatest
+jointure saw horrible. He private he on be imagine suppose. Fertile beloved
+evident through no service elderly is. Blind there if every no so at.
+Own neglected you preferred way sincerity delivered his attempted. To of
+message cottage windows do besides against uncivil.
+'
+  expected='
+Had repulsive dashwoods suspicion sincerity but advantage now him. Remark
+easily garret nor nay. Civil those mrs enjoy shy fat merry. You greatest
+jointure saw horrible. He private he on be imagine suppose. Fertile beloved
+evident through no service elderly is. Blind there if every no so at. Own
+neglected you preferred way sincerity delivered his attempted. To of message
+cottage windows do besides against uncivil.
+'
+
+  assertEquals "$expected" "$(echo "$input" | main)"
+}
+
 
 test__should_balance_basic_lines() {
   pushStack "Duis autem vel eum iriure"
@@ -252,6 +275,25 @@ test__should_balance_basic_lines() {
 
   assertEquals "Duis autem vel eum" "$STACK2"
   assertEquals "iriure consequat, vel" "$STACK1"
+}
+
+test__balance_lines_for_last() {
+  DEBUG=true
+  CLOSING=true
+  pushStack 'evident through no service elderly is. Blind there if every no so at. Own'
+  pushStack 'neglected you preferred way sincerity delivered his attempted. To of message'
+  pushStack 'cottage windows do besides against uncivil.'
+  balanceStack2
+
+  unset STACK1 STACK2 STACK3
+  pushStack 'evident through no service elderly is. Blind there if every no so at. Own'
+  pushStack 'neglected you preferred way sincerity delivered his attempted. To of message'
+  pushStack 'cottage windows do besides against delivered his attempted delivered uncivil.'
+  balanceStack2
+
+  # assertEquals "evident through no service elderly is. Blind there if every no so at. Own" "$STACK3"
+  # assertEquals "neglected you preferred way sincerity delivered his attempted. To of message" "$STACK2"
+  # assertEquals "cottage windows do besides against uncivil." "$STACK1"
 }
 
 
