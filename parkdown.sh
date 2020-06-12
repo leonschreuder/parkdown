@@ -30,20 +30,31 @@ main() {
   shift "$((OPTIND - 1))"
 
   LINE_LENGTH=$MAX_LINE_LENGTH
-  input="$(cat -)"
+  # input="$(</dev/stdin)"
+  # echo "i:'$input'" >&2
 
-  while IFS=$'\n' read  -r line; do
+  while IFS=$'\n' read -d $'\n' -r line; do
+    [[ -n ${DEBUG+x} ]] && echo "l:'$line'" >&2
 
     # simply print empty lines from input directly
-    [[ "$line" == "" ]] &&
-      echo "" && continue
+    if [[ "$line" == "" ]]; then
 
-    [[ "$IN_BLOCK" != true ]] &&
-      startNewBlock "$line"
+      if [[ "$IN_BLOCK" == true ]]; then
+        closeBlock
+      fi
 
-    buildLinesFromWords "$line"
+      pushStack ""
 
-  done <<< "$input"
+    else
+
+      if [[ "$IN_BLOCK" != true ]]; then
+        startNewBlock "$line"
+      fi
+
+      buildLinesFromWords "$line"
+    fi
+
+  done # <<< "$input"
   closeBlock
 }
 
@@ -62,12 +73,15 @@ startNewBlock() {
 }
 
 closeBlock() {
-  pushStack "$LINE_BUILDER" # might contain last line.
-  LINE_BUILDER=""
+  if [[ "$LINE_BUILDER" != "" ]]; then
+    pushStack "$LINE_BUILDER" # might contain last line.
+  fi
+  unset LINE_BUILDER
   balanceLinesInStack
   checkEdgeCase
   emptyStack
   IN_BLOCK=false
+  unset indent prefix
 }
 
 buildLinesFromWords() {
@@ -81,9 +95,10 @@ buildLinesFromWords() {
     [[ "$prefix" != "" && "$word" == "$prefix" ]] &&
       continue
 
-    [[ "$LINE_BUILDER" == "" ]] &&
-      LINE_BUILDER="$word" &&
+    if [[ "$LINE_BUILDER" == "" ]]; then
+      LINE_BUILDER="$word"
       continue
+    fi
 
     lineWithAddedWord="$LINE_BUILDER $word"
     if [[ ${#lineWithAddedWord} -lt $LINE_LENGTH ]];then
@@ -96,22 +111,43 @@ buildLinesFromWords() {
   done
 }
 
-pushStack() {
-  if [[ "$STACK3" != "" ]]; then
-    lineToPrint="$STACK3"
-    if [[ "$listItem" != "" && "$lineToPrint" != "$listItem"* ]]; then
-      # we're currently printing a list, but this line doesn't have the prefix
-      lineToPrint="  $lineToPrint"
-    fi
-    if [[ "$prefix" != "" ]]; then
-      lineToPrint="$prefix $lineToPrint"
-    fi
-    lineToPrint="$indent$lineToPrint"
-    echo "$lineToPrint"
+printStackItem() {
+  bufName="$1"
+  bufValue="${!bufName}"
+  lineToPrint="$bufValue"
+  if [[ "$listItem" != "" && "$lineToPrint" != "$listItem"* ]]; then
+    # we're currently printing a list, but this line doesn't have the prefix
+    lineToPrint="  $lineToPrint"
   fi
-  STACK3="$STACK2"
-  STACK2="$STACK1"
+  if [[ "$prefix" != "" ]]; then
+    lineToPrint="$prefix $lineToPrint"
+  fi
+  lineToPrint="$indent$lineToPrint"
+  echo "$lineToPrint"
+}
+
+pushStack() {
+  if [[ -n ${STACK3+x} ]]; then
+    printStackItem "STACK3"
+  fi
+  if [[ -n ${STACK2+x} ]];then 
+    STACK3="$STACK2"
+  fi
+  if [[ -n ${STACK1+x} ]];then
+    STACK2="$STACK1"
+  fi
   STACK1="$1"
+  logStack
+}
+
+logStack() {
+  if [[ -n ${DEBUG+x} ]]; then
+    s1=null; s2=null; s3=null
+    [[ -n ${STACK3+x} ]] && s3="'$STACK3'"
+    [[ -n ${STACK2+x} ]] && s2="'$STACK2'"
+    [[ -n ${STACK1+x} ]] && s1="'$STACK1'"
+    echo -e "-- stack --\n\t3:$s3\n\t2:$s2\n\t1:$s1" >&2
+  fi
 }
 
 balanceLinesInStack() {
@@ -147,9 +183,13 @@ balanceBufferes() {
 }
 
 emptyStack() {
-  while [[ "$STACK1$STACK2$STACK3" != "" ]]; do
-    pushStack ""
-  done
+  [[ -n ${STACK3+x} ]] && printStackItem "STACK3"
+  [[ -n ${STACK2+x} ]] && printStackItem "STACK2"
+  [[ -n ${STACK1+x} ]] && printStackItem "STACK1"
+  unset STACK1 STACK2 STACK3
+  # while [[ "$STACK1$STACK2$STACK3" != "" ]]; do
+  #   pushStack ""
+  # done
 }
 
 if [[ "$0" == "$BASH_SOURCE" ]]; then

@@ -35,14 +35,16 @@ vero eros et accumsan et iusto odio.'
 }
 
 
-test__should_support_multiple_input_lines() {
+test__should_support_multiple_input_lines_with_breaks() {
+  export DEBUG=true
   input='
 Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie
 consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan
 et iusto odio.
 
 '
-  expected='Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
+  expected='
+Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse
 molestie consequat, vel illum dolore eu feugiat nulla facilisis at
 vero eros et accumsan et iusto odio.
 
