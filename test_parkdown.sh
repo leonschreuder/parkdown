@@ -279,17 +279,18 @@ test__should_balance_basic_lines() {
 
 test__balance_lines_for_last() {
   DEBUG=true
-  CLOSING=true
   pushStack 'evident through no service elderly is. Blind there if every no so at. Own'
   pushStack 'neglected you preferred way sincerity delivered his attempted. To of message'
+  balanceStack2
+  CLOSING=true
   pushStack 'cottage windows do besides against uncivil.'
   balanceStack2
 
-  unset STACK1 STACK2 STACK3
-  pushStack 'evident through no service elderly is. Blind there if every no so at. Own'
-  pushStack 'neglected you preferred way sincerity delivered his attempted. To of message'
-  pushStack 'cottage windows do besides against delivered his attempted delivered uncivil.'
-  balanceStack2
+  # unset STACK1 STACK2 STACK3
+  # pushStack 'evident through no service elderly is. Blind there if every no so at. Own'
+  # pushStack 'neglected you preferred way sincerity delivered his attempted. To of message'
+  # pushStack 'cottage windows do besides against delivered his attempted delivered uncivil.'
+  # balanceStack2
 
   # assertEquals "evident through no service elderly is. Blind there if every no so at. Own" "$STACK3"
   # assertEquals "neglected you preferred way sincerity delivered his attempted. To of message" "$STACK2"
